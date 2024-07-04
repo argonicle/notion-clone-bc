@@ -2,8 +2,9 @@
 const userRepository = require("../repositories/userRepository");
 const JWT = require("../utils/jwt");
 const { encryptPassword, decryptPassword } = require("../utils/encryption");
-const existValue = require("../utils/existValue");
+const { existValue, notExistValue } = require("../utils/existValue");
 const validateMatch = require("../utils/validateMatch");
+const convertToNullIfStringNull = require("../utils/convertToNull");
 
 const signUp = async ({ username, password }) => {
   // パスワードのエンクリプト
@@ -11,7 +12,7 @@ const signUp = async ({ username, password }) => {
 
   // ユーザー名の重複チェック
   const overlappingUser = await userRepository.findUserByUsername(username);
-  await existValue({ value: overlappingUser, wanted: false });
+  await notExistValue(overlappingUser);
 
   // 新しいユーザーの作成
   const user = await userRepository.createUser({ username, password });
@@ -25,18 +26,14 @@ const signUp = async ({ username, password }) => {
 const login = async ({ username, password }) => {
   // ユーザーの取得
   const user = await userRepository.findUserByUsername(username);
-  await existValue({ value: user, wanted: true });
+  await existValue(user);
 
   // パスワードのデクリプト
   user.password = decryptPassword(user.password, process.env.SECRET_KEY);
 
   // パスワードの照合
   // todo デコードしたパスワードでの比較は危険
-  await validateMatch({
-    value_1: user.password,
-    value_2: password,
-    wanted: true,
-  });
+  await validateMatch(user.password, password);
 
   // JWTトークンの生成
   const token = JWT.createToken(user._id);
@@ -44,19 +41,19 @@ const login = async ({ username, password }) => {
   return { user, token };
 };
 
-const verifyAndRetrieveUser = async (headers) => {
+const verifyUser = async (headers) => {
   // トークンの取得
   const token = JWT.getToken(headers);
-  await existValue({ value: token, wanted: true });
+  await existValue(convertToNullIfStringNull(token));
 
   // トークンのデコード
   const decodedToken = JWT.decodeToken(token);
 
   // ユーザーの取得
   const user = await userRepository.findUserById(decodedToken.id);
-  await existValue({ value: user, wanted: true });
+  await existValue(user);
 
   return user;
 };
 
-module.exports = { signUp, login, verifyAndRetrieveUser };
+module.exports = { signUp, login, verifyUser };

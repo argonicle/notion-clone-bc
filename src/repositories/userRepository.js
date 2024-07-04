@@ -3,7 +3,6 @@ const User = require("../models/userSchema");
 
 const createUser = async (user) => {
   const newUser = new User(user);
-
   return await newUser.save();
 };
 

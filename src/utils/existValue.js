@@ -1,18 +1,20 @@
 // utils/existValue
-const existValue = async ({ value, wanted }) => {
-  if (wanted) {
-    if (!value) {
-      const error = new Error("value does not exist");
-      error.statusCode = 404;
-      throw error;
-    }
-  } else {
-    if (value) {
-      const error = new Error("value already exists");
-      error.statusCode = 409;
-      throw error;
-    }
+const existValue = async (value) => {
+  if (!value) {
+    const error = new Error("存在しません");
+    error.type = "exist";
+    error.statusCode = 404;
+    throw error;
   }
 };
 
-module.exports = existValue;
+const notExistValue = async (value) => {
+  if (value) {
+    const error = new Error("すでに存在しています");
+    error.type = "exist";
+    error.statusCode = 409;
+    throw error;
+  }
+};
+
+module.exports = { existValue, notExistValue };

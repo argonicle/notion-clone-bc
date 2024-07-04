@@ -28,13 +28,23 @@ const login = async (req, res) => {
   }
 };
 
-const verifyAndRetrieveUser = async (req, res) => {
+const verifyUser = async (req, res, next) => {
   try {
-    const user = await userService.verifyAndRetrieveUser(req.headers);
+    const user = await userService.verifyUser(req.headers);
+    req.user = user;
+    next();
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+const sendVerifiedUser = (req, res) => {
+  try {
+    const user = req.user;
     res.status(200).json({ message: "認証されました", user });
   } catch (error) {
     handleError(res, error);
   }
 };
 
-module.exports = { signUp, login, verifyAndRetrieveUser };
+module.exports = { signUp, login, verifyUser, sendVerifiedUser };

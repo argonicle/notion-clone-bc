@@ -8,7 +8,7 @@ const createToken = (userId) => {
 };
 
 const getToken = (headers) => {
-  return headers.authorization.split(" ")[1];
+  return headers?.authorization?.split(" ")[1];
 };
 
 const decodeToken = (token) => {
